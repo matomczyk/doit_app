@@ -1,6 +1,6 @@
 from django import forms
 from .models import Task, User, Category
-from django.forms import ModelForm
+from django.forms import ModelForm, SelectDateWidget
 
 
 class DateInput(forms.DateInput):
@@ -41,4 +41,20 @@ class SignUpForm(ModelForm):
             'password'
             ]
 
+class SelectMonthForm(forms.Form):
+    MONTHS = (
+        (1, 'January'),
+        (2, 'February'),
+        (3, 'March'),
+        (4, 'April'),
+        (5, 'May'),
+        (6, 'June'),
+        (7, 'July'),
+        (8, 'August'),
+        (9, 'September'),
+        (10, 'October'),
+        (11, 'November'),
+        (12, 'December')
+    )
 
+    month = forms.ChoiceField(choices=MONTHS)
