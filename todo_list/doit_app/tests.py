@@ -3,7 +3,7 @@ import datetime
 from django.test import Client
 import pytest
 from django.urls import reverse
-from django.test import RequestFactory
+from doit_app.forms import SelectMonthForm
 from django.contrib.auth.models import User
 from doit_app.models import Task
 
@@ -141,3 +141,17 @@ def test_delete_task_view(user, client, task):
     response = client.post(reverse("delete-task", kwargs={"pk": task.id}))
     assert response.status_code == 302
     assert Task.objects.count() == tasks - 1
+
+@pytest.mark.django_db
+def test_budget_summary_view_get(user, client, budget_summary_view):
+    """
+        Test the GET request for the BudgetSummaryView.
+        """
+    client.force_login(user=user)
+    response = client.get('/budget-summary/')
+
+    assert response.status_code == 200
+    assert isinstance(response.context['form'], SelectMonthForm)
+
+
+
