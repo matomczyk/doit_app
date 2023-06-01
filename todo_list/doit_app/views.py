@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.generic import FormView, CreateView, ListView, UpdateView, DetailView, View, DeleteView
 from .models import Task, Category, User
-from .forms import AddTaskForm, UpdateTaskForm, SignUpForm
+from .forms import AddTaskForm, UpdateTaskForm, SignUpForm, SelectMonthForm
 from datetime import timedelta, datetime, date
 import calendar
 from todo_list.utils import Calendar
@@ -74,60 +74,74 @@ class MainPage(View):
 
 class BudgetSummaryView(LoginRequiredMixin, View):
     def get(self, request):
-        tasks = list(Task.objects.filter(user_id=self.request.user))
-        categories = list(Category.objects.all())
-        today = date.today()
-        this_month = today.month
+        form = SelectMonthForm()
+        return render(request, 'doit_app/budget-summary.html', context={"form": form})
+
+    def post(self, request):
+        form = SelectMonthForm(request.POST)
+        tasks = list(Task.objects.filter (user_id=self.request.user))
+        categories = list(Category.objects.all ())
+        today = date.today ()
         this_year = today.year
         summary = []
         estimated_monthly_costs = 0
         final_monthly_costs = 0
         variance = 0
+        if form.is_valid():
+            chosen_month = int(form.cleaned_data['month'])
         for category in categories:
-            print(category)
             summary.append({'category': category})
             for task in tasks:
                 if task.start_time:
-                    if task.start_time.month == this_month and task.start_time.year == this_year and task.category == category:
+                    if task.start_time.month == chosen_month and task.start_time.year == this_year and task.category == category:
                         estimated_monthly_costs += float(task.estimated_cost)
                         final_monthly_costs += float(task.final_cost)
                         variance = estimated_monthly_costs - final_monthly_costs
             summary.append({'estimated': estimated_monthly_costs,
-                                    'final': final_monthly_costs,
-                                    'variance': variance})
+                            'final': final_monthly_costs,
+                            'variance': variance})
             estimated_monthly_costs = 0
             final_monthly_costs = 0
             variance = 0
-        ctx = {"summary": summary}
+        ctx = {"summary": summary,
+               "chosen_month": calendar.month_name[chosen_month]}
 
         return render(request, "doit_app/budget-summary.html", ctx)
 
 
 class CompletionSummaryView(LoginRequiredMixin, View):
-    def get(self, request):
+    def get(self, request) :
+        form = SelectMonthForm ()
+        return render(request, 'doit_app/completion-summary.html', context={"form": form})
+    def post(self, request):
+        form = SelectMonthForm (request.POST)
         today = date.today()
-        this_month = today.month
         this_year = today.year
         tasks = list(Task.objects.filter(user_id=self.request.user))
         number_of_tasks = 0
         number_of_tasks_completed = 0
+        if form.is_valid () :
+            chosen_month = int(form.cleaned_data['month'])
         for task in tasks:
-            if task.start_time.month == this_month and task.start_time.year == this_year:
+            if task.start_time.month == chosen_month and task.start_time.year == this_year:
                 number_of_tasks += 1
                 if task.completed:
                     number_of_tasks_completed += 1
 
         if number_of_tasks == 0:
-            ctx = {"no_task" : "Seems like you haven't added any tasks yet."}
+            ctx = {"no_task" : "Seems like you haven't added any tasks yet.",
+                   "chosen_month": calendar.month_name[chosen_month]}
         else:
             number = float(number_of_tasks_completed/number_of_tasks)
             percentage = f"{number:.2%}"
             good_job_message = f"Congratulations! You have completed {percentage} of your tasks this month," \
                            f"great job!"
             if number >= 0.80:
-                ctx = {"message" : good_job_message}
+                ctx = {"message": good_job_message,
+                       "chosen_month": calendar.month_name[chosen_month]}
             else:
-                ctx = {"summary" : percentage}
+                ctx = {"summary": percentage,
+                       "chosen_month": calendar.month_name[chosen_month]}
 
         return render(request, "doit_app/completion-summary.html", ctx)
 
