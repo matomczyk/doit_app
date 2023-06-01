@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    body{
+        background:black;
+        overflow:hidden;
+        margin:0;
+    }
+    canvas{
+        background:#000;
+    }
+
+    .loading-bar ul {
+      margin: auto;
+      height: 10px;
+      width: 500px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      list-style: none;
+      padding: 0;
+    }
+
+    .loading-bar li {
+      display: block;
+      float: left;
+      width: 90px;
+      height: 10px;
+      margin-right: 10px;
+    }
+
+    .loading-bar li:nth-child(-n+3) {
+      background: rgba(255,255,255,0.9);
+      box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                        0px 0px 20px rgba(117,182,214,0.5);
+    }
+
+    .loading-bar li:nth-child(n+4) {
+      box-shadow: inset 0px 0px 10px 1px rgba(117,182,255,0.4),
+                        0px 0px 20px rgba(117,182,255,0.1);
+    }
+
+    .loading-bar li:nth-child(3) {
+      -webkit-animation: pulse 1s alternate infinite;
+      -moz-animation: pulse 1s alternate infinite;
+    }
+
+    @-webkit-keyframes pulse {
+      0% {
+        background: rgba(255,255,255,1);
+        box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                          0px 0px 40px 2px rgba(105,135,255,1);
+      }
+      100% {
+        background: rgba(255,255,255,0);
+        box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                          0px 0px 30px 2px rgba(105,135,255,0.3);
+      }
+    }
+
+    @-moz-keyframes pulse {
+      0% {
+        background: rgba(255,255,255,1);
+        box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                          0px 0px 40px 2px rgba(105,135,255,1);
+      }
+      100% {
+        background: rgba(255,255,255,0);
+        box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                          0px 0px 30px 2px rgba(105,135,255,0.3);
+      }
+    }
+</style>
+
+
+
+{% if message %}
+    <div>
+        <p style="color:white"> {{ message }} </p>
+            <canvas id="canvas"> </canvas>
+    </div>
+{% elif summary %}
+    <div>
+        <p style="color: white"> This month you have completed {{ summary }} of your tasks, keep going! </p>
+
+    <ul class="loading-bar">
+         <li></li>
+         <li></li>
+         <li></li>
+         <li></li>
+         <li></li>
+    </ul></div>
+{% else %}
+    <div>
+        <p style="color: white"> {{ no_task }} </p>  <a href="/add-task">
+            Add your first task here. </a></p>
+    </div>
+{% endif %}
+<script defer src="/static/js/fireworks.js"></script>
+{% endblock %}

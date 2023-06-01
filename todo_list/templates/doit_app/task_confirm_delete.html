@@ -1,0 +1,7 @@
+<form action="" method="post">
+    <p> Are you sure you want to delete task {{ task.name }}? </p>
+    {% csrf_token %}
+    {{ form.as_p }}
+  <input type="submit" value="Yes">
+  <input type="button" value="No, take me back" onclick="history.back()">
+</form>
