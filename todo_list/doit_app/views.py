@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.generic import FormView, CreateView, ListView, UpdateView, DetailView, View, DeleteView
-from .models import Task, Category, User
+from .models import Task, Category, User, BudgetSummary
 from .forms import AddTaskForm, UpdateTaskForm, SignUpForm, SelectMonthForm
 from datetime import timedelta, datetime, date
 import calendar
@@ -80,31 +80,37 @@ class BudgetSummaryView(LoginRequiredMixin, View):
     def post(self, request):
         form = SelectMonthForm(request.POST)
         tasks = list(Task.objects.filter (user_id=self.request.user))
-        categories = list(Category.objects.all ())
+        categories = list(Category.objects.all())
         today = date.today ()
         this_year = today.year
         summary = []
         estimated_monthly_costs = 0
         final_monthly_costs = 0
         variance = 0
+        total_est = 0
+        total = 0
         if form.is_valid():
             chosen_month = int(form.cleaned_data['month'])
         for category in categories:
-            summary.append({'category': category})
             for task in tasks:
                 if task.start_time:
                     if task.start_time.month == chosen_month and task.start_time.year == this_year and task.category == category:
                         estimated_monthly_costs += float(task.estimated_cost)
                         final_monthly_costs += float(task.final_cost)
                         variance = estimated_monthly_costs - final_monthly_costs
+                        total_est += float(task.estimated_cost)
+                        total += float(task.final_cost)
             summary.append({'estimated': estimated_monthly_costs,
                             'final': final_monthly_costs,
-                            'variance': variance})
+                            'variance': variance,
+                            'category': category})
             estimated_monthly_costs = 0
             final_monthly_costs = 0
             variance = 0
+            budget_summary = BudgetSummary.objects.create(month=calendar.month_name[chosen_month], total_cost=total)
         ctx = {"summary": summary,
-               "chosen_month": calendar.month_name[chosen_month]}
+               "chosen_month": calendar.month_name[chosen_month],
+               "total": budget_summary}
 
         return render(request, "doit_app/budget-summary.html", ctx)
 
