@@ -1,4 +1,5 @@
 import datetime
+import calendar
 
 from django.test import Client
 import pytest
@@ -143,7 +144,7 @@ def test_delete_task_view(user, client, task):
     assert Task.objects.count() == tasks - 1
 
 @pytest.mark.django_db
-def test_budget_summary_view_get(user, client, budget_summary_view):
+def test_budget_summary_view_get(user, client):
     """
         Test the GET request for the BudgetSummaryView.
         """
@@ -152,6 +153,83 @@ def test_budget_summary_view_get(user, client, budget_summary_view):
 
     assert response.status_code == 200
     assert isinstance(response.context['form'], SelectMonthForm)
+
+@pytest.mark.django_db
+def test_budget_summary_view_post(client, user, category, category1, create_task):
+    """
+    Test the POST request for the BudgetSummaryView.
+    """
+    client.force_login(user=user)
+    task1 = create_task("Test1", 1, category, datetime.date.today(), 10, 8)
+    task2 = create_task("Test2", 2, category1, datetime.date.today(), 11, 3)
+    task1.refresh_from_db()
+    task2.refresh_from_db()
+    chosen_month = 6
+    response = client.post(reverse('budget-summary'), data={"month": chosen_month})
+
+    assert response.status_code == 200
+    assert response.context['chosen_month'] == calendar.month_name[chosen_month]
+    assert response.context['total'].month == calendar.month_name[chosen_month]
+
+    summary = response.context['summary']
+    assert len(summary) == 12
+
+    summary_item1 = summary[-2]
+    assert summary_item1['category'] == category
+    assert summary_item1['estimated'] == 10
+    assert summary_item1['final'] == 8
+    assert summary_item1['variance'] == 2
+
+    summary_item2 = summary[-1]
+    assert summary_item2['category'] == category1
+    assert summary_item2['estimated'] == 11
+    assert summary_item2['final'] == 3
+    assert summary_item2['variance'] == 8
+
+    total = response.context['total']
+    assert total.month == calendar.month_name[chosen_month]
+    assert total.total_cost == 11
+
+@pytest.mark.django_db
+def test_completion_summary_view_get(user, client):
+    """
+        Test the GET request for the CompletionSummaryView.
+        """
+    client.force_login(user=user)
+    response = client.get('/completion-summary/')
+
+    assert response.status_code == 200
+    assert isinstance(response.context['form'], SelectMonthForm)
+
+
+
+@pytest.mark.django_db
+def test_completion_summary_view_post(client, user, category, category1, create_task, create_task_completed):
+    """
+    Test the POST request for the BudgetSummaryView.
+    """
+    client.force_login(user=user)
+    task1 = create_task("Test1", 1, category, datetime.date.today(), 10, 8)
+    task2 = create_task("Test2", 2, category1, datetime.date.today(), 11, 3)
+    task3 = create_task_completed("Test3", 2, category1, datetime.date.today(), 1, 3)
+    task4 = create_task_completed("Test4", 2, category, datetime.date.today(), 1, 0)
+    chosen_month = 6
+    response = client.post(reverse('completion-summary'), data={"month": chosen_month})
+
+    assert response.status_code == 200
+    assert response.context['chosen_month'] == calendar.month_name[chosen_month]
+
+    if response.context.get('no_task'):
+        assert response.context['no_task'] == "Seems like you haven't added any tasks yet."
+    else:
+        if response.context.get('message'):
+            assert response.context[
+                       'message'] == "Congratulations! You have completed 66.67% of your tasks this month, great job!"
+        elif response.context.get('summary'):
+            assert response.context['summary'] == "50.00%"
+
+
+1
 
 
 
