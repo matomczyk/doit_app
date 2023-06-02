@@ -41,7 +41,7 @@ class Time(models.Model):
 
 
 class Reminder(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    task = models.ManyToManyField(Task)
     reminder_time = models.DateTimeField()
 
     def __str__(self):
@@ -49,7 +49,7 @@ class Reminder(models.Model):
 
 
 class BudgetSummary(models.Model):
-    month = models.DateField()
+    month = models.CharField(max_length=32)
     total_cost = models.DecimalField(decimal_places=2, max_digits=100)
 
     def __str__(self):
