@@ -75,8 +75,11 @@
     }
 </style>
 
-
-
+<form action="" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Save">
+    <h1 style="color: white"> {{ chosen_month }} </h1>
 {% if message %}
     <div>
         <p style="color:white"> {{ message }} </p>
@@ -100,4 +103,5 @@
     </div>
 {% endif %}
 <script defer src="/static/js/fireworks.js"></script>
+</form>
 {% endblock %}

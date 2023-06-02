@@ -1,2 +1,23 @@
-{{ object.name }}
-{{ object.description }}
+{% extends 'base.html' %}
+{% block content %}
+
+<table>
+    <th> Name </th>
+    <th> Description </th>
+    <th> Priority </th>
+    <th> Category </th>
+    <th> Start time </th>
+    <th> End time </th>
+
+    <tr>
+        <td> {{object.name }}</td>
+        <td> {{object.description }}</td>
+        <td> {{object.priority }}</td>
+        <td> <p data-width="255" title="{{ object.category.description }}"> {{object.category }}</p></td>
+        <td> {{object.start_time }}</td>
+        <td> {{object.end_time }}</td>
+    </tr>
+
+</table>
+
+{% endblock %}

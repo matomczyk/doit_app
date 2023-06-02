@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
+<form action="" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Save">
+    <h1> {{ chosen_month }}</h1>
 <table>
   <tr>
     <th>Category</th>
@@ -14,6 +19,10 @@
          <td> {{element.final}} </td>
          <td> {{element.variance}} </td>
      </tr>
-     {% endfor %}
+    {% endfor %}
+    <th> {{ total }}</th>
 </table>
+
+</form>
+
 {% endblock %}
