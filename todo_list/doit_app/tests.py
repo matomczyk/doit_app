@@ -229,21 +229,6 @@ def test_completion_summary_view_post(client, user, category, category1, create_
             assert response.context['summary'] == "50.00%"
 
 
-@pytest.mark.django_db
-def test_add_subtask_view_requires_login(client, task):
-    """
-    Test the GET request for the AddTaskView.
-    """
-    response = client.get(reverse("subtask", kwargs={"pk": task.id}))
-    assert response.status_code == 302
-    assert response.url == f"/accounts/login/?next=/add-subtask/{task.id}"
-
-
-# @pytest.mark.django_db
-# def test_update_subtask_view(user, client, task):
-#     client.force_login(user=user)
-#     response = client.get(reverse("update-subtask", kwargs={"pk": task.id}))
-#     assert response.status_code == 200
 
 @pytest.mark.django_db
 def test_add_task_tag_view(user, client, task):
@@ -271,14 +256,30 @@ def test_update_subtask_view_post(user, client, subtask, task):
     subtask.refresh_from_db()
     assert subtask.completed == payload["completed"]
 
+# @pytest.mark.django_db
+# def test_update_subtask_view(user, client, task):
+#     client.force_login(user=user)
+#     response = client.get(reverse("update-subtask", kwargs={"pk": task.id}))
+#     assert response.status_code == 200
+
+@pytest.mark.django_db
+def test_add_subtask_view_requires_login(client, task):
+    """
+    Test the GET request for the AddTaskView.
+    """
+    response = client.get(reverse("subtask", kwargs={"pk": task.id}))
+    assert response.status_code == 302
+    assert response.url == f"/accounts/login/?next=/add-subtask/{task.id}"
+
 
 # @pytest.mark.django_db
-# def test_add_subtask_view_post(client, user, task):
+# def test_add_subtask_view_post(client, user, subtask):
 #     """
 #     Test the POST request for the AddTaskView.
 #     """
 #     client.force_login(user=user)
-#     response = client.get(reverse('add_subtask', args={"pk": task.id}))
+#     response = client.get(reverse('subtask', kwargs={"pk": subtask.id}))
+#
 #     assert response.status_code == 200
 #
 #     subtasks = Subtask.objects.count()
@@ -301,6 +302,16 @@ def test_task_subtasks_view(user, client, task, subtask):
     assert response.context['task'] == task
     assert list(response.context['subtasks']) == [subtask]
 
+@pytest.mark.django_db
+def test_delete_subtask_view(user, client, subtask):
+    client.force_login(user=user)
+    response = client.get(reverse("delete-subtask", kwargs={"pk": subtask.id}))
+    assert response.status_code == 200
+
+    subtasks = Subtask.objects.count()
+    response = client.post(reverse("delete-subtask", kwargs={"pk": subtask.id}))
+    assert response.status_code == 302
+    assert Subtask.objects.count() == subtasks - 1
 
 
 
