@@ -6,7 +6,7 @@ import pytest
 from django.urls import reverse
 from doit_app.forms import SelectMonthForm
 from django.contrib.auth.models import User
-from doit_app.models import Task
+from doit_app.models import Task, Subtask
 
 
 
@@ -229,7 +229,78 @@ def test_completion_summary_view_post(client, user, category, category1, create_
             assert response.context['summary'] == "50.00%"
 
 
-1
+@pytest.mark.django_db
+def test_add_subtask_view_requires_login(client, task):
+    """
+    Test the GET request for the AddTaskView.
+    """
+    response = client.get(reverse("subtask", kwargs={"pk": task.id}))
+    assert response.status_code == 302
+    assert response.url == f"/accounts/login/?next=/add-subtask/{task.id}"
+
+
+# @pytest.mark.django_db
+# def test_update_subtask_view(user, client, task):
+#     client.force_login(user=user)
+#     response = client.get(reverse("update-subtask", kwargs={"pk": task.id}))
+#     assert response.status_code == 200
+
+@pytest.mark.django_db
+def test_add_task_tag_view(user, client, task):
+    client.force_login(user=user)
+
+    response = client.post(reverse(('tag'), kwargs={"pk": task.id}), data={'name': 'New Tag'})
+    assert response.status_code == 302
+    assert response.url == '/task-list/'
+
+    # Verify that the task tag was added to the task
+    task.refresh_from_db()
+    assert task.tasktag_set.count() == 1
+    assert task.tasktag_set.first().name == 'New Tag'
+
+@pytest.mark.django_db
+def test_update_subtask_view_post(user, client, subtask, task):
+    client.force_login(user=user)
+    payload = {
+        "completed": 1,
+    }
+    response = client.post(reverse("update-subtask", kwargs={"pk": task.id}), data=payload)
+
+    assert response.status_code == 302
+
+    subtask.refresh_from_db()
+    assert subtask.completed == payload["completed"]
+
+
+# @pytest.mark.django_db
+# def test_add_subtask_view_post(client, user, task):
+#     """
+#     Test the POST request for the AddTaskView.
+#     """
+#     client.force_login(user=user)
+#     response = client.get(reverse('add_subtask', args={"pk": task.id}))
+#     assert response.status_code == 200
+#
+#     subtasks = Subtask.objects.count()
+#     payload = {
+#         'name': 'Test Subtask 2',
+#     }
+#     response = client.post(reverse('subtask'), data=payload)
+#
+#     assert response.status_code == 302
+#     assert Task.objects.count() == subtasks + 1
+
+@pytest.mark.django_db
+def test_task_subtasks_view(user, client, task, subtask):
+    client.force_login (user=user)
+    response = client.get(reverse('task-subtasks', kwargs={'pk': task.pk}))
+
+    assert response.status_code == 200
+    assert 'task' in response.context
+    assert 'subtasks' in response.context
+    assert response.context['task'] == task
+    assert list(response.context['subtasks']) == [subtask]
+
 
 
 
