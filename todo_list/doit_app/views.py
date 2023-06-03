@@ -5,16 +5,27 @@ from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.generic import FormView, CreateView, ListView, UpdateView, DetailView, View, DeleteView
-from .models import Task, Category, User, BudgetSummary
-from .forms import AddTaskForm, UpdateTaskForm, SignUpForm, SelectMonthForm
+from .models import Task, Category, User, BudgetSummary, Subtask, TaskTag
+from .forms import AddTaskForm, UpdateTaskForm, SignUpForm, SelectMonthForm, AddReminderForm, AddTagForm, AddSubtaskForm, \
+                    UpdateSubtaskForm
 from datetime import timedelta, datetime, date
 import calendar
 from todo_list.utils import Calendar
+from django.core.mail import send_mail
 # Create your views here.
 
 
 class TaskView(LoginRequiredMixin, DetailView):
     model = Task
+    context_object_name = 'task'
+    def get_context_data(self, **kwargs) :
+        context = super().get_context_data(**kwargs)
+        task = self.object
+        context['tags'] = task.tasktag_set.values_list('name', flat=True)
+        return context
+
+
+
 
 
 class AddTaskView(LoginRequiredMixin, CreateView):
@@ -116,8 +127,8 @@ class BudgetSummaryView(LoginRequiredMixin, View):
 
 
 class CompletionSummaryView(LoginRequiredMixin, View):
-    def get(self, request) :
-        form = SelectMonthForm ()
+    def get(self, request):
+        form = SelectMonthForm()
         return render(request, 'doit_app/completion-summary.html', context={"form": form})
     def post(self, request):
         form = SelectMonthForm (request.POST)
@@ -152,3 +163,50 @@ class CompletionSummaryView(LoginRequiredMixin, View):
         return render(request, "doit_app/completion-summary.html", ctx)
 
 
+
+class AddTaskTag(LoginRequiredMixin, FormView):
+    form_class = AddTagForm
+    template_name = 'doit_app/add-tag.html'
+    success_url = reverse_lazy('task-list')
+
+    def form_valid(self, form):
+        tag = self.request.POST.get("name")
+        task_id = self.kwargs['pk']
+        tag, _ = TaskTag.objects.get_or_create(name=tag)
+        tag.task.add(task_id)
+        return super().form_valid(form)
+        
+
+class AddSubtaskView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        task = Task.objects.get(id=pk)
+        form = AddSubtaskForm()
+        return render(request, 'doit_app/add-subtask.html', {'form': form, 'task': task})
+
+    def post(self, request, pk):
+        task = Task.objects.get(id=pk)
+        form = AddSubtaskForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            subtask = Subtask(task=task, name=name)
+            subtask.save()
+            return redirect('task-details', pk=pk)
+        return render(request, 'doit_app/add-subtask.html', {'form': form, 'task': task})
+
+
+class UpdateSubtaskView(LoginRequiredMixin, UpdateView):
+    model = Subtask
+    form_class = UpdateSubtaskForm
+    template_name_suffix = '-update'
+    success_url = reverse_lazy('task-list')
+
+class DeleteSubtaskView(LoginRequiredMixin, DeleteView):
+    model = Subtask
+    success_url = '/task-list'
+
+
+class TaskSubtasksView(LoginRequiredMixin, View):
+    def get(self, request, pk) :
+        task = Task.objects.get (id=pk)
+        subtasks = task.subtask_set.all()
+        return render(request, 'doit_app/task-subtasks.html', {'task': task, 'subtasks': subtasks})
