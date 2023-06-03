@@ -3,6 +3,9 @@ from django.contrib.auth.models import User
 
 
 class Category(models.Model):
+    """
+    Stores categories for budget summary purposes. Category may be added in django admin
+    """
     name = models.CharField(max_length=120, null=False)
     description = models.CharField(max_length=255)
 
@@ -12,6 +15,9 @@ class Category(models.Model):
 
 
 class Task(models.Model):
+    """
+    Main model storing informations about user tasks. Related to User and Category model.
+    """
     PRIORITY_CHOICES = (
         (3, 'Low'),
         (2, 'Medium'),
@@ -38,6 +44,9 @@ class Reminder(models.Model):
 
 
 class BudgetSummary(models.Model):
+    """
+    Model that stores budget summary information for each month.
+    """
     month = models.CharField(max_length=32)
     total_cost = models.DecimalField(decimal_places=2, max_digits=100)
 
@@ -46,10 +55,17 @@ class BudgetSummary(models.Model):
 
 
 class TaskTag(models.Model):
+    """
+    Model that stores tags added by user to certain tasks. Model has many-to-many relationship with Task model.
+    """
     name = models.CharField(max_length=32)
     task = models.ManyToManyField(Task)
 
 class Subtask(models.Model):
+    """
+    Model that stores information about smaller tasks related with main Task model.
+    Model only allows task name and completion check.
+    """
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     completed = models.BooleanField(default=False)
