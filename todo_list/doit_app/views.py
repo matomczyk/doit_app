@@ -1,21 +1,21 @@
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.utils.safestring import mark_safe
-from django.views import View
 from django.views.generic import FormView, CreateView, ListView, UpdateView, DetailView, View, DeleteView
 from .models import Task, Category, User, BudgetSummary, Subtask, TaskTag
 from .forms import AddTaskForm, UpdateTaskForm, SignUpForm, SelectMonthForm, AddReminderForm, AddTagForm, AddSubtaskForm, \
                     UpdateSubtaskForm
-from datetime import timedelta, datetime, date
+from datetime import date
 import calendar
-from todo_list.utils import Calendar
-from django.core.mail import send_mail
+
 # Create your views here.
 
 
 class TaskView(LoginRequiredMixin, DetailView):
+    """
+    A view that allows user to see details of each task.
+    A view also shows list of tags added to the task.
+    """
     model = Task
     context_object_name = 'task'
     def get_context_data(self, **kwargs) :
@@ -29,6 +29,9 @@ class TaskView(LoginRequiredMixin, DetailView):
 
 
 class AddTaskView(LoginRequiredMixin, CreateView):
+    """
+    A view that allows user to add new task.
+    """
     template_name = 'doit_app/add-task.html'
     form_class = AddTaskForm
     success_url = reverse_lazy('task-list')
@@ -40,18 +43,27 @@ class AddTaskView(LoginRequiredMixin, CreateView):
 
 
 class UpdateTaskView(LoginRequiredMixin, UpdateView):
+    """
+    A view that has fields not used in AddTaskView, used to update task with completion check, final cost and end time.
+    """
     model = Task
     form_class = UpdateTaskForm
     template_name_suffix = '-update'
     success_url = reverse_lazy('task-list')
 
 class DeleteTaskView(LoginRequiredMixin, DeleteView):
+    """
+    A view that allows user to delete task.
+    """
     model = Task
     success_url = '/task-list'
 
 
 
 class TaskListView(LoginRequiredMixin, ListView):
+    """
+    A view that shows user all task created by them.
+    """
     model = Task
     paginate_by = 30
 
@@ -62,6 +74,9 @@ class TaskListView(LoginRequiredMixin, ListView):
 
 # Sign Up View
 class SignUpView(FormView):
+    """
+    A view to create account.
+    """
     form_class = SignUpForm
     success_url = reverse_lazy('login')
     template_name = 'doit_app/signup.html'
@@ -79,11 +94,18 @@ class SignUpView(FormView):
 
 
 class MainPage(View):
+    """
+    Welcome page view.
+    """
     def get(self, request):
         return render(request, "doit_app/main-page.html")
 
 
 class BudgetSummaryView(LoginRequiredMixin, View):
+    """
+    A view that allows user to see summarised monthly spending.
+    There is a month selection field and spendings are divided by categories included in Category model.
+    """
     def get(self, request):
         form = SelectMonthForm()
         return render(request, 'doit_app/budget-summary.html', context={"form": form})
@@ -127,6 +149,9 @@ class BudgetSummaryView(LoginRequiredMixin, View):
 
 
 class CompletionSummaryView(LoginRequiredMixin, View):
+    """
+    A view that shows user percentage of completed tasks for chosen month.
+    """
     def get(self, request):
         form = SelectMonthForm()
         return render(request, 'doit_app/completion-summary.html', context={"form": form})
@@ -165,6 +190,9 @@ class CompletionSummaryView(LoginRequiredMixin, View):
 
 
 class AddTaskTag(LoginRequiredMixin, FormView):
+    """
+    A view that allows user to add custom tags to each task.
+    """
     form_class = AddTagForm
     template_name = 'doit_app/add-tag.html'
     success_url = reverse_lazy('task-list')
@@ -178,6 +206,9 @@ class AddTaskTag(LoginRequiredMixin, FormView):
         
 
 class AddSubtaskView(LoginRequiredMixin, View):
+    """
+    A view that allows user to add subtask to each task.
+    """
     def get(self, request, pk):
         task = Task.objects.get(id=pk)
         form = AddSubtaskForm()
@@ -195,17 +226,26 @@ class AddSubtaskView(LoginRequiredMixin, View):
 
 
 class UpdateSubtaskView(LoginRequiredMixin, UpdateView):
+    """
+    A view that allows user to check completion box of subtasks.
+    """
     model = Subtask
     form_class = UpdateSubtaskForm
     template_name_suffix = '-update'
     success_url = reverse_lazy('task-list')
 
 class DeleteSubtaskView(LoginRequiredMixin, DeleteView):
+    """
+    A view that allows user to delete subtasks.
+    """
     model = Subtask
     success_url = '/task-list'
 
 
 class TaskSubtasksView(LoginRequiredMixin, View):
+    """
+    A view that shows list of subtasks for each task.
+    """
     def get(self, request, pk) :
         task = Task.objects.get (id=pk)
         subtasks = task.subtask_set.all()
