@@ -8,6 +8,7 @@
     <th> Category </th>
     <th> Start time </th>
     <th> End time </th>
+    <th> Tags</th>
 
     <tr>
         <td> {{object.name }}</td>
@@ -16,6 +17,15 @@
         <td> <p data-width="255" title="{{ object.category.description }}"> {{object.category }}</p></td>
         <td> {{object.start_time }}</td>
         <td> {{object.end_time }}</td>
+        <td>
+            {% for tag in tags %}
+                {{ tag }}
+                {% if not forloop.last %}, {% endif %}
+            {% endfor %}
+            </td>
+    </tr>
+    <tr>
+        <td> <a href="/task-subtasks/{{object.id}}"> See subtasks </a> </td>
     </tr>
 
 </table>
