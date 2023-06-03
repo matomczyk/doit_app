@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="post" action="{% url 'task-list' %}">
+    <table>
+        <th> Name </th>
+        <th> Start time </th>
+        <th> Completed? </th>
+        <th> </th>
+
+        {% for task in page_obj %}
+        <tr>
+            <td> {{ task.name }} </td>
+            <td> {{ task.start_time }} </td>
+            <td> {% if task.completed %}
+                <span style='margin:auto; display:table; font-size:25px;'>&#10003;</span>
+                {% else %}
+                <span style='margin:auto; display:table; font-size:20px;'>&#10007;</span>
+                {% endif %} </td>
+            <td> <a href="/add-subtask/{{task.id}}"> Add subtask </a> </td>
+            <td> <a href="/add-tag/{{task.id}}"> Add tag</a></td>
+            <td> <a href="/task/{{task.id}}">Task details</a> </td>
+            <td> <a href="/update-task/{{task.id}}">Update task</a> </td>
+            <td> <a href="/delete-task/{{task.id}}">Delete task</a> </td>
+        </tr>
+        {% endfor %}
+            <tr>
+                <td> <a href="/task-tags"> See tags </a></td>
+            </tr>
+    </table>
+
+
+<li><a href="/add-task/">Add task</a></li>
+
+</form>
+{% endblock %}
