@@ -1,5 +1,5 @@
 from django import forms
-from .models import Task, User, Category
+from .models import Task, User, Category, Reminder, TaskTag, Subtask
 from django.forms import ModelForm, SelectDateWidget
 
 
@@ -58,3 +58,30 @@ class SelectMonthForm(forms.Form):
     )
 
     month = forms.ChoiceField(choices=MONTHS)
+
+class AddReminderForm(ModelForm):
+    class Meta:
+        model = Reminder
+        fields = ['reminder_time']
+
+
+class AddTagForm(ModelForm):
+    class Meta:
+        model = TaskTag
+        fields = ['name']
+
+
+class SearchTagForm(forms.Form):
+    tag_name = forms.CharField(max_length=32)
+
+
+class AddSubtaskForm(ModelForm):
+    class Meta:
+        model = Task
+        fields = ['name', 'completed']
+
+class UpdateSubtaskForm(ModelForm):
+    class Meta:
+        model = Subtask
+        fields = ['completed']
+
