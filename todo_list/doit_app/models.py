@@ -29,19 +29,8 @@ class Task(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
 
 
-
-class Time(models.Model):
-    time = models.ManyToManyField('Task')
-
-    def duration(self):
-        return self.end_time - self.start_time
-
-    def __str__(self):
-        return f"{self.task} - {self.start_time} to {self.end_time}"
-
-
 class Reminder(models.Model):
-    task = models.ManyToManyField(Task)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
     reminder_time = models.DateTimeField()
 
     def __str__(self):
@@ -56,3 +45,11 @@ class BudgetSummary(models.Model):
         return f"{self.month} - Total Cost: {self.total_cost}"
 
 
+class TaskTag(models.Model):
+    name = models.CharField(max_length=32)
+    task = models.ManyToManyField(Task)
+
+class Subtask(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    completed = models.BooleanField(default=False)
